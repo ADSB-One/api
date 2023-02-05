@@ -6,7 +6,7 @@ COPY package.json tsconfig.json ./
 
 RUN npm i && npm i typescript -g
 
-COPY src/ ./
+COPY src/ ./src
 
 RUN tsc
 
