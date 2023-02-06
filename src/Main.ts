@@ -70,14 +70,14 @@ server.get('/clients/mlat', async (_req: any, res) => {
     res.send('Not implemented.');
 });
 
-server.get('/v2/icao/:icao', async (req: any, res) => {
-    var icao = req.params.icao;
+server.get('/v2/hex/:hex', async (req: any, res) => {
+    var hex = req.params.hex;
     
-    var icaoRes: any = await axios.get(`https://globe.adsb.one/re-api/?find_hex=${icao}&jv2`);
-    icaoRes = JSON.stringify(icaoRes.data);
+    var hexRes: any = await axios.get(`https://globe.adsb.one/re-api/?find_hex=${hex}&jv2`);
+    hexRes = JSON.stringify(hexRes.data);
     
     res.type('json');
-    res.send(icaoRes);
+    res.send(hexRes);
 });
 
 server.get('/v2/callsign/:callsign', async (req: any, res) => {
