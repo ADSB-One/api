@@ -13,6 +13,7 @@ server.get('/feed-status', async(req: any, res) => {
 
     clients = clients.clients;
     var cIp = 'N/A';
+    var match = false;
     var feedId = null;
     var kbits = null;
     var messages = null;
@@ -22,6 +23,7 @@ server.get('/feed-status', async(req: any, res) => {
         var rawIp = client[1].toString().replace(' port ', ':').replace(/\s/g, '');
         cIp = rawIp.substring(0, rawIp.lastIndexOf(':'));
         if (cIp == ip) {
+            match = true;
             feedId = client[0];
             kbits = client[2];
             messages = client[4];
@@ -30,8 +32,12 @@ server.get('/feed-status', async(req: any, res) => {
             break;
         }
     }
-
-    var rres = {"uuid": feedId, "ip": ip, "kbits": kbits, "messages": messages, "positions": positions, "tPositions": tPositions};
+    var rres;
+    if (match) {
+        rres = {"status": "Connected", "uuid": feedId, "ip": ip, "kbits": kbits, "messages": messages, "positions": positions, "tPositions": tPositions};
+    } else {
+        rres = {"status": "Not connected"};
+    }
 
     res.type('json');
     res.send(rres);
