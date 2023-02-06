@@ -1,7 +1,28 @@
 import axios from 'axios';
+import * as FS from 'fs';
+import * as CORS from 'cors';
 import * as Express from 'express';
 
 const server = Express.default();
+
+server.use(CORS.default());
+
+server.get('/receivers/beast', async (_req: any, res) => {
+    var receivers = await JSON.parse(FS.readFileSync('/beast-json/receivers.json', 'utf8'));
+    
+    receivers = receivers.receivers;
+    var cleaned: any[][] = [];
+
+    receivers.forEach((e: any) => {
+        cleaned.push([e[8],e[9]]);
+    });
+
+    res.send(cleaned);
+});
+
+server.get('/receivers/mlat', async (_req: any, res) => {
+    res.send('Not implemented.');
+});
 
 server.get('/v2/icao/:icao', async (req: any, res) => {
     var icao = req.params.icao;
