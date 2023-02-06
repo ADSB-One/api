@@ -52,8 +52,7 @@ server.get('/clients/beast', async (_req: any, res) => {
     var cleaned: any[][] = [];
 
     receivers.forEach((e: any) => {
-        // Some unknown 0300 code.
-        if (e[2] < 0.1) cleaned.push([e[8],e[9]]);
+        cleaned.push([e[8],e[9]]);
     });
 
     console.log(cleaned.length);
