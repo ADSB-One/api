@@ -7,20 +7,61 @@ const server = Express.default();
 
 server.use(CORS.default());
 
-server.get('/receivers/beast', async (_req: any, res) => {
+server.get('/feed-status', async(req: any, res) => {
+    var clients = await JSON.parse(FS.readFileSync('/beast-json/clients.json', 'utf8'));
+    var ip = req.headers['cf-connecting-ip'];
+
+    clients = clients.clients;
+    var cIp = 'N/A';
+    var feedId = null;
+    var kbits = null;
+    var messages = null;
+    var positions = null;
+    var tPositions = null;
+    for (var client of clients) {
+        var rawIp = client[1].toString().replace(' port ', ':').replace(/\s/g, '');
+        cIp = rawIp.substring(0, rawIp.lastIndexOf(':'));
+        if (cIp == ip) {
+            feedId = client[0];
+            kbits = client[2];
+            messages = client[4];
+            positions = client[5];
+            tPositions = client[8];
+            break;
+        }
+    }
+
+    var rres = {"uuid": feedId, "ip": ip, "kbits": kbits, "messages": messages, "positions": positions, "tPositions": tPositions};
+
+    res.type('json');
+    res.send(rres);
+});
+
+server.get('/clients/beast', async (_req: any, res) => {
     var receivers = await JSON.parse(FS.readFileSync('/beast-json/receivers.json', 'utf8'));
+    var clients = await JSON.parse(FS.readFileSync('/beast-json/clients.json', 'utf8'));
     
     receivers = receivers.receivers;
+    clients = clients.clients;
     var cleaned: any[][] = [];
 
     receivers.forEach((e: any) => {
-        cleaned.push([e[8],e[9]]);
+        // Some unknown 0300 code.
+        if (e[2] < 0.1) cleaned.push([e[8],e[9]]);
     });
 
-    res.send(cleaned);
+    console.log(cleaned.length);
+
+    var rres = {
+        "clients": clients.length,
+        "receivers": cleaned
+    };
+
+    res.send(rres);
+    cleaned.length = 0;
 });
 
-server.get('/receivers/mlat', async (_req: any, res) => {
+server.get('/clients/mlat', async (_req: any, res) => {
     res.send('Not implemented.');
 });
 
@@ -111,4 +152,4 @@ server.get('/v2/point/:lat/:lon/:rad', async (req: any, res) => {
     res.send(pointRes);
 });
 
-server.listen(3000);
+server.listen(3001);
