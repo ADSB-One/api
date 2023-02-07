@@ -9,11 +9,13 @@ server.use(CORS.default());
 
 server.get('/feed-status', async(req: any, res) => {
     var clients = await JSON.parse(FS.readFileSync('/beast-json/clients.json', 'utf8'));
+    var mlatClients = await JSON.parse(FS.readFileSync('/mlat-json/clients.json', 'utf8'));
     var ip = req.headers['cf-connecting-ip'];
 
     clients = clients.clients;
     var cIp = 'N/A';
     var match = false;
+    var mlatMatch = false;
     var feedId = null;
     var kbits = null;
     var messages = null;
@@ -32,12 +34,15 @@ server.get('/feed-status', async(req: any, res) => {
             break;
         }
     }
-    var rres;
-    if (match) {
-        rres = {"status": "Connected", "uuid": feedId, "ip": ip, "kbits": kbits, "messages": messages, "positions": positions, "tPositions": tPositions};
-    } else {
-        rres = {"status": "Not connected"};
+    for (var mclient in mlatClients) {
+        console.log(mlatClients[`${mclient}`].source_ip)
+        if (mlatClients[`${mclient}`].source_ip == ip) {
+            mlatMatch = true;
+            break;
+        }
     }
+    var rres;
+    rres = {"status": `${match ? "Connected" : "Not connected"}`, "mlatStatus": `${mlatMatch ? "Connected" : "Not connected"}`, "uuid": feedId, "ip": ip, "kbits": kbits, "messages": messages, "positions": positions, "tPositions": tPositions};
 
     res.type('json');
     res.send(rres);
