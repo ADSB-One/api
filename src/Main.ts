@@ -2,6 +2,8 @@ import axios from 'axios';
 import * as FS from 'fs';
 import * as CORS from 'cors';
 import * as Express from 'express';
+import type BeastClient from './BeastClient';
+import type MlatClient from './MlatClient';
 
 const server = Express.default();
 
@@ -9,58 +11,93 @@ server.use(CORS.default());
 
 server.get('/feed-status', async(req: any, res) => {
     var clients = await JSON.parse(FS.readFileSync('/beast-json/clients.json', 'utf8'));
+    var receivers = await JSON.parse(FS.readFileSync('/beast-json/receivers.json', 'utf8'));
     var mlatClients = await JSON.parse(FS.readFileSync('/mlat-json/clients.json', 'utf8'));
     var ip = req.headers['cf-connecting-ip'];
 
     clients = clients.clients;
-    var cIp = 'N/A';
-    var match = false;
-    var mlatMatch = false;
-    var feedId = null;
-    var kbits = null;
-    var messages = null;
-    var positions = null;
-    var tPositions = null;
-    for (var client of clients) {
-        var rawIp = client[1].toString().replace(' port ', ':').replace(/\s/g, '');
-        cIp = rawIp.substring(0, rawIp.lastIndexOf(':'));
-        if (cIp == ip) {
-            match = true;
-            feedId = client[0];
-            kbits = client[2];
-            messages = client[4];
-            positions = client[5];
-            tPositions = client[8];
-            break;
-        }
-    }
-    for (var mclient in mlatClients) {
-        console.log(mlatClients[`${mclient}`].source_ip)
-        if (mlatClients[`${mclient}`].source_ip == ip) {
-            mlatMatch = true;
-            break;
-        }
-    }
-    var rres;
-    rres = {"status": `${match ? "Connected" : "Not connected"}`, "mlatStatus": `${mlatMatch ? "Connected" : "Not connected"}`, "uuid": feedId, "ip": ip, "kbits": kbits, "messages": messages, "positions": positions, "tPositions": tPositions};
+    receivers = receivers.receivers;
+    var feederClients: BeastClient[] = [];
+    var feederReceivers: any[] = [];
+    var feederMlats: MlatClient[] = [];
 
+    // Iterate through clients.json to find clients with matching IP.
+    for (var client of clients) {
+
+        // Get rid of the bullshit spacing in the host/ip section of the client.
+        var rawIp = client[1].toString().replace(' port ', ':').replace(/\s/g, '');
+        // Split into IP and port.
+        var clientIp = rawIp.split(':')[0];
+        var clientPort = rawIp.split(':')[1];
+        
+        // If a client IP matches the connecting IP, add it to the list of clients.
+        if (clientIp == ip) {
+            var c: BeastClient = {
+                receiverId: client[0],
+                port: clientPort,
+                avg_kbit_s: client[2],
+                conn_time: client[3],
+                messages_s: client[4],
+                positions_s: client[5],
+                reduce_signal: client[6], 
+                recent_rtt: client[7],
+                positions: client[8]
+            };
+
+            feederClients.push(c);
+        }
+    }
+
+    for (var a of feederClients) {
+        var shortUuid = a.receiverId.substring(0, a.receiverId.lastIndexOf('-', a.receiverId.lastIndexOf('-') -1));
+        for (var b of receivers) {
+            if (b[0] == shortUuid) feederReceivers.push(b);
+        }
+    }
+
+    for (var mclient in mlatClients) {
+        var mlatClient = mlatClients[mclient];
+        if (mlatClient.source_ip == ip && !mlatClient.privacy) {
+            feederMlats.push({
+                user: mlatClient.user,
+                uid: mlatClient.uid,
+                uuid: mlatClient.uuid,
+                lat: mlatClient.lat,
+                lon: mlatClient.lon,
+                alt: mlatClient.alt,
+                port: mlatClient.source_port,
+                message_rate: mlatClient.message_rate,
+                peer_count: mlatClient.peer_count,
+                bad_sync_timeout: mlatClient.bad_sync_timeout,
+                outlier_percent: mlatClient.outlier_percent,
+                bad_peer_list: mlatClient.bad_peer_list,
+                sync_interest: mlatClient.sync_interest,
+                mlat_interest: mlatClient.mlat_interest
+            });
+        }
+    }
+    
     res.type('json');
-    res.send(rres);
+
+    var clientInfo = {"host": ip, "feederClients": feederClients, "feederReceivers": feederReceivers, "feederMlats": feederMlats};
+
+    res.send(clientInfo);
 });
 
 server.get('/clients/beast', async (_req: any, res) => {
-    var receivers = await JSON.parse(FS.readFileSync('/beast-json/receivers.json', 'utf8'));
     var clients = await JSON.parse(FS.readFileSync('/beast-json/clients.json', 'utf8'));
+    var receivers = await JSON.parse(FS.readFileSync('/beast-json/receivers.json', 'utf8'));
     
-    receivers = receivers.receivers;
     clients = clients.clients;
+    receivers = receivers.receivers;
     var cleaned: any[][] = [];
 
-    receivers.forEach((e: any) => {
-        cleaned.push([e[8],e[9]]);
-    });
-
-    console.log(cleaned.length);
+    for (var a of clients) {
+        var shortUuid = a[0].substring(0, a[0].lastIndexOf('-', a[0].lastIndexOf('-') -1));
+        for (var b of receivers) {
+            if (b[0] == shortUuid) cleaned.push([b[8],b[9]]);
+        }
+    }
 
     var rres = {
         "clients": clients.length,
@@ -72,7 +109,27 @@ server.get('/clients/beast', async (_req: any, res) => {
 });
 
 server.get('/clients/mlat', async (_req: any, res) => {
-    res.send('Not implemented.');
+    var syncs = await JSON.parse(FS.readFileSync('/mlat-json/sync.json', 'utf8'));
+    var syncClients: any [] = [];
+    var syncPeerCoords: any[][] = [];
+    
+    // Parse through syncs, and store.
+    for (var sync in syncs) {
+        var syncClient = syncs[sync]
+        
+        if (syncClient.lat != null) syncClients.push([syncClient.lat, syncClient.lon]);
+        for (var peer in syncClient.peers) {
+            if (syncs[peer].lat != null && syncClient.lat != null) syncPeerCoords.push([syncClient.lat, syncClient.lon, syncs[peer].lat, syncs[peer].lon]);
+        }
+    }
+
+    var rres = {
+        "client_count": syncClients.length,
+        "clients": syncPeerCoords,
+    };
+
+    res.type('json');
+    res.send(rres);
 });
 
 server.get('/v2/hex/:hex', async (req: any, res) => {
