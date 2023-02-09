@@ -2,6 +2,9 @@
 
 The ADSB One API lives at https://api.adsb.one. Use the table below for endpoints. To make switching easy, all responses conform to the ADSBExchange v2 API. 
 
+# Endpoints
+**NOTE**: Replace `[var]` with your value. Do not include the brackets in your API call.
+
 | Endpoint | Method | Description |
 -----------|--------|----------------
 | /v2/hex/[hex] | GET | Return all aircraft with an exact match on one of the given Mode S hex ids (limited to 1000) |
