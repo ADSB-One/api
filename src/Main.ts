@@ -57,7 +57,7 @@ server.get('/feed-status', async(req: any, res) => {
 
     for (var mclient in mlatClients) {
         var mlatClient = mlatClients[mclient];
-        if (mlatClient.source_ip == ip && !mlatClient.privacy) {
+        if (mlatClient.source_ip == ip) {
             feederMlats.push({
                 user: mlatClient.user,
                 uid: mlatClient.uid,
