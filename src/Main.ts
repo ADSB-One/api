@@ -9,6 +9,8 @@ server.use(CORS.default());
 const readsb_api_host = process.env['READSB_API_HOST'] || 'readsb_hub';
 const readsb_api_port = process.env['READSB_API_PORT'] || '30006';
 
+
+// Get one or more aircraft based on Mode S hex code
 server.get('/v2/hex/:hex', async (req: any, res) => {
     var hex = req.params.hex;
     
@@ -19,6 +21,7 @@ server.get('/v2/hex/:hex', async (req: any, res) => {
     res.send(hexRes);
 });
 
+// Get one or more aircraft based on callsign
 server.get('/v2/callsign/:callsign', async (req: any, res) => {
     var callsign = req.params.callsign;
     
@@ -29,6 +32,7 @@ server.get('/v2/callsign/:callsign', async (req: any, res) => {
     res.send(callsignRes);
 });
 
+// Get one or more aircraft based on registration
 server.get('/v2/reg/:reg', async (req: any, res) => {
     var reg = req.params.reg;
     
@@ -39,6 +43,7 @@ server.get('/v2/reg/:reg', async (req: any, res) => {
     res.send(regRes);
 });
 
+// Get one or more aircraft based on ICAO type code
 server.get('/v2/type/:type', async (req: any, res) => {
     var type = req.params.type;
     
@@ -49,6 +54,7 @@ server.get('/v2/type/:type', async (req: any, res) => {
     res.send(typeRes);
 });
 
+// Get one or more aircraft based on squawk
 server.get('/v2/squawk/:squawk', async (req: any, res) => {
     var squawk = req.params.squawk;
     
@@ -59,6 +65,7 @@ server.get('/v2/squawk/:squawk', async (req: any, res) => {
     res.send(squawkRes);
 });
 
+// Get all currently tracked military aircraft
 server.get('/v2/mil/', async (_req: any, res) => {
     var milRes: any = await axios.get(`http://${readsb_api_host}:${readsb_api_port}/re-api/?all&filter_mil&jv2`);
     milRes = JSON.stringify(milRes.data);
@@ -67,6 +74,7 @@ server.get('/v2/mil/', async (_req: any, res) => {
     res.send(milRes);
 });
 
+// Get all currently tracked LADD aircraft
 server.get('/v2/ladd/', async (_req: any, res) => {
     var laddRes: any = await axios.get(`http://${readsb_api_host}:${readsb_api_port}/re-api/?all&filter_ladd&jv2`);
     laddRes = JSON.stringify(laddRes.data);
@@ -75,6 +83,7 @@ server.get('/v2/ladd/', async (_req: any, res) => {
     res.send(laddRes);
 });
 
+// Get all currently tracked PIA aircraft
 server.get('/v2/pia/', async (_req: any, res) => {
     var piaRes: any = await axios.get(`http://${readsb_api_host}:${readsb_api_port}/re-api/?all&filter_pia&jv2`);
     piaRes = JSON.stringify(piaRes.data);
@@ -83,6 +92,7 @@ server.get('/v2/pia/', async (_req: any, res) => {
     res.send(piaRes);
 });
 
+// Get all aircraft within a point in a certain radius
 server.get('/v2/point/:lat/:lon/:rad', async (req: any, res) => {
     var lat = req.params.lat;
     var lon = req.params.lon;
