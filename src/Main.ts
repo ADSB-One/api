@@ -96,6 +96,6 @@ server.get('/v2/point/:lat/:lon/:rad', async (req: any, res) => {
     res.send(pointRes);
 });
 
-server.listen(3001, () => {
+server.listen(3000, () => {
     console.info('ADSB One API server started.')
 });
