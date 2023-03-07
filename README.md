@@ -1,7 +1,7 @@
 ![Docker Build Status](https://github.com/ADSB-One/api/actions/workflows/docker.yml/badge.svg)
 # ADSB One API
 
-The ADSB One API lives at https://api.adsb.one. Use the table below for endpoints. To make switching easy, all responses conform to the ADSBExchange v2 API. 
+The ADSB One API lives at https://api.adsb.one. Use the table below for endpoints. To make switching easy, all responses conform to the [ADSBExchange v2 API](https://www.adsbexchange.com/version-2-api-wip/).
 
 # Endpoints
 **NOTE**: Replace `[var]` with your value. Do not include the brackets in your API call.
