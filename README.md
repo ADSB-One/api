@@ -26,4 +26,4 @@ The ADSB One API lives at https://api.adsb.one. Use the table below for endpoint
 ```  
 
 ## Rate Limiting
-The ADSB One API is rate limited to a maximum of one request every 2 seconds.
+The ADSB One API is not currently rate limited
